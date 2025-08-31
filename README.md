@@ -30,14 +30,42 @@ Entrenar un modelo de regresión que prediga las emisiones de CO₂ de un vehíc
 ## 🛠️ Metodología
 
 1. **Preprocesamiento de datos**  
-   - Limpieza de datos faltantes  
-   - Transformación de variables categóricas (One-Hot Encoding o manual)  
-   - Normalización/estandarización de variables numéricas  
+   - Eliminación de duplicados y valores nulos.  
+   - Filtrado de valores extremos no lógicos (ej. cilindros negativos).  
+   - Normalización de variables numéricas para mejorar la convergencia del gradiente.  
+   - Transformación opcional de variables categóricas mediante One-Hot Encoding.  
 
-2. **Modelo 1: Regresión desde cero (sin librerías de ML)**  
-   - Implementación de regresión lineal usando el método de **gradiente descendente**  
-   - Función de costo: Error Cuadrático Medio (MSE)  
-   - Actualización de parámetros hasta convergencia  
+2. **Modelo 1: Regresión Lineal desde cero (Gradiente Descendiente)**  
+   En este enfoque **no se utilizan librerías de machine learning**. La implementación se hace paso a paso con `numpy`:
+   - **Inicialización**:  
+     Los parámetros (θ) se inicializan en cero.  
+   - **Normalización**:  
+     Cada feature se estandariza con media y desviación estándar para evitar escalas distintas.  
+   - **Función de costo (MSE)**:  
+     Se mide el error cuadrático medio entre las predicciones y los valores reales.  
+     
+   - **Gradiente Descendiente**:  
+     En cada iteración se actualizan los parámetros según la derivada parcial del costo:  
+    
+     Donde **α** es la tasa de aprendizaje.  
+   - **Convergencia**:  
+     El proceso se repite hasta que se alcanza un número fijo de iteraciones o los cambios en el costo son mínimos.  
+
+   Este modelo está implementado en `src/regression_scratch.py`.
+
+3. **Modelo 2: Regresión con librerías**  
+   Para comparar, se utiliza `scikit-learn` con modelos como:
+   - `LinearRegression` (regresión lineal estándar)  
+   - `Ridge` (regresión con regularización L2)  
+   - `Lasso` (regresión con regularización L1)  
+
+4. **Evaluación**  
+   - **Métricas utilizadas**:  
+     - **MSE**: Error cuadrático medio  
+     - **RMSE**: Raíz del error cuadrático medio  
+     - **MAE**: Error absoluto medio  
+     - **R²**: Coeficiente de determinación  
+   - Se comparan los resultados de la implementación manual contra los de `scikit-learn`.  
 
 3. **Modelo 2: Regresión con librerías**  
    - Implementación con `scikit-learn` (`LinearRegression`, `Ridge`, etc.)  
