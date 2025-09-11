@@ -43,8 +43,11 @@ class LinearRegressionGD:
 if __name__ == "__main__":
     # leer dataset
     df = pd.read_csv("./data/co2.csv")
+    
+    df = df.drop_duplicates()
+    df = df.dropna()
 
-    # Features and target (adjust to your dataset columns)
+    # Features and target 
     X = df[["Engine Size(L)", "Cylinders", "Fuel Consumption City (L/100 km)"]].values
     y = df["CO2 Emissions(g/km)"].values
 
@@ -52,7 +55,7 @@ if __name__ == "__main__":
     model = LinearRegressionGD(learning_rate=0.01, n_iter=2000)
     model.fit(X, y)
 
-    # Predictions on the same dataset (to check error)
+
     y_pred = model.predict(X)
 
     # Metricsa
@@ -65,13 +68,13 @@ if __name__ == "__main__":
     print(f"RMSE: {rmse:.2f}")
     print(f"MAE : {mae:.2f}")
 
-    # Show first 10 comparisons
+    
     print("\nReal vs Predicted (first 10):")
     for real, pred in list(zip(y[:10], y_pred[:10])):
         print(f"Real: {real:.2f} | Pred: {pred:.2f} | Error: {real - pred:.2f}")
 
-    # Example prediction
-    X_new = np.array([[3.5, 6, 12]])  # Example: Engine 3.5L, 6 cylinders, 12 L/100km
+
+    X_new = np.array([[3.5, 6, 12]]) 
     pred_new = model.predict(X_new)
     print("\nExample Prediction for Engine=3.5L, Cylinders=6, City=12:")
     print("Predicted CO2:", pred_new[0])

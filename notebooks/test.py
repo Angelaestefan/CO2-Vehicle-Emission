@@ -16,7 +16,7 @@ sns.set(style="whitegrid", palette="muted", font_scale=1.2)
 # ================================
 # 1. Cargar los datos
 # ================================
-data_path = "../data/co2.csv"  # ajusta ruta si es necesario
+data_path = "data/co2.csv"  # ajusta ruta si es necesario
 df = pd.read_csv(data_path)
 
 # ================================
