@@ -3,6 +3,9 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, explained_variance_score
+from sklearn.model_selection import learning_curve
+import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
 
 #Funciones
 def agrupar_categorias(df, threshold=0.01):
@@ -38,49 +41,62 @@ df = agrupar_categorias(df, threshold=0.01)
 # One-hot encoding
 df = one_hot_encode(df)
 
-# Ajusta estos nombres de columna según tu archivo CSV
 
 
 # Selecciona solo columnas numéricas para X
+
 y_column = 'CO2 Emissions(g/km)'
 categorical_cols = ['Make', 'Model', 'Vehicle Class', 'Transmission', 'Fuel Type']
 X = df.drop(columns=[y_column] + categorical_cols)
 y = df[y_column]
 
-
-
-# Separar datos en entrenamiento y prueba
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Separar datos en train, validation y test
+X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size=0.25, random_state=42) # 0.25*0.8=0.2
 
 # Crear y entrenar el modelo
 model = LinearRegression()
 model.fit(X_train, y_train)
 
 # Predicciones
-y_pred = model.predict(X_test)
+y_pred_train = model.predict(X_train)
+y_pred_val = model.predict(X_val)
+y_pred_test = model.predict(X_test)
+
+
+
 
 # Evaluación
 
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
-expl_var = explained_variance_score(y_test, y_pred)
+
+def print_metrics(y_true, y_pred, label):
+    mse = mean_squared_error(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    expl_var = explained_variance_score(y_true, y_pred)
+    print(f"\n--- {label} ---")
+    print(f"MSE: {mse:.2f}")
+    print(f"MAE: {mae:.2f}")
+    print(f"R2: {r2:.4f}")
+    print(f"Explained Variance: {expl_var:.4f}")
 
 print('Coeficientes:', model.coef_)
 print('Intercepto:', model.intercept_)
-print('MSE (Error cuadrático medio):', mse)
-print('MAE (Error absoluto medio):', mae)
-print('R2 (Coeficiente de determinación):', r2)
-print('Explained Variance (Varianza explicada):', expl_var)
+print_metrics(y_train, y_pred_train, 'Train')
+print_metrics(y_val, y_pred_val, 'Validation')
+print_metrics(y_test, y_pred_test, 'Test')
 
 # Visualización: Predicciones vs Valores reales
+
 import matplotlib.pyplot as plt
 plt.figure(figsize=(8,5))
-plt.scatter(y_test, y_pred, alpha=0.5)
-plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--')
+plt.scatter(y_test, y_pred_test, alpha=0.5, label='Test')
+plt.scatter(y_val, y_pred_val, alpha=0.5, label='Validation', color='orange')
+plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
 plt.xlabel('Valores reales')
 plt.ylabel('Predicciones')
 plt.title('Predicciones vs Valores reales')
+plt.legend()
 plt.show()
 
 # Visualización: Importancia de coeficientes
@@ -93,4 +109,23 @@ plt.barh(np.array(feature_names)[indices], coef[indices])
 plt.xlabel('Coeficiente')
 plt.title('Importancia de variables (Top 10)')
 plt.gca().invert_yaxis()
+plt.show()
+
+
+
+train_sizes, train_scores, val_scores = learning_curve(
+    model, X, y, cv=5, scoring='r2', n_jobs=-1,
+    train_sizes=np.linspace(0.1, 1.0, 10), random_state=42)
+
+train_scores_mean = np.mean(train_scores, axis=1)
+val_scores_mean = np.mean(val_scores, axis=1)
+
+plt.figure(figsize=(8,6))
+plt.plot(train_sizes, train_scores_mean, 'o-', color='blue', label='Entrenamiento')
+plt.plot(train_sizes, val_scores_mean, 'o-', color='orange', label='Validación')
+plt.xlabel('Tamaño del conjunto de entrenamiento')
+plt.ylabel('R2 Score')
+plt.title('Curva de validación')
+plt.legend()
+plt.grid(True)
 plt.show()
