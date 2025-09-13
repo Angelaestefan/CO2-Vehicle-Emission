@@ -56,8 +56,7 @@ Entrenar un modelo de regresión que prediga las emisiones de CO₂ de un vehíc
 3. **Modelo 2: Regresión con librerías**  
    Para comparar, se utiliza `scikit-learn` con modelos como:
    - `LinearRegression` (regresión lineal estándar)  
-   - `Ridge` (regresión con regularización L2)  
-   - `Lasso` (regresión con regularización L1)  
+ 
 
 4. **Evaluación**  
    - **Métricas utilizadas**:  
@@ -66,14 +65,6 @@ Entrenar un modelo de regresión que prediga las emisiones de CO₂ de un vehíc
      - **MAE**: Error absoluto medio  
      - **R²**: Coeficiente de determinación  
    - Se comparan los resultados de la implementación manual contra los de `scikit-learn`.  
-
-3. **Modelo 2: Regresión con librerías**  
-   - Implementación con `scikit-learn` (`LinearRegression`, `Ridge`, etc.)  
-   - Comparación de resultados con la implementación manual  
-
-4. **Evaluación**  
-   - Métricas: RMSE, MAE, R²  
-   - Comparación de desempeño entre los dos enfoques  
 
 ---
 
