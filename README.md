@@ -4,7 +4,7 @@ Este proyecto implementa un modelo de **regresión** para predecir las emisiones
 
 El trabajo se divide en **dos enfoques**:
 1. Una implementación **desde cero** usando únicamente `numpy` y `pandas` (sin librerías de machine learning).  
-2. Una implementación usando librerías de ML como `scikit-learn` para comparar resultados.  
+2. Una implementación usando librerías de ML `scikit-learn` para comparar resultados.  
 
 ---
 
