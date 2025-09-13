@@ -72,8 +72,8 @@ Entrenar un modelo de regresión que prediga las emisiones de CO₂ de un vehíc
 
 1. **Clonar repositorio y entrar al proyecto**:
  ```bash
- git clone <repo-url>
- cd co2-prediction
+ git clone https://github.com/Angelaestefan/CO2-Vehicle-Emission.git
+ cd CO2-Vehicle-Emission
   ```
 
 2. Instalar dependencias:
