@@ -1,11 +1,12 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, explained_variance_score
 from sklearn.model_selection import learning_curve
 import matplotlib.pyplot as plt
 from sklearn.model_selection import learning_curve
+import numpy as np
 
 #Funciones
 def agrupar_categorias(df, threshold=0.01):
@@ -24,6 +25,17 @@ def one_hot_encode(df):
     # Concatenar las columnas vectorizadas sin eliminar las originales
     df = pd.concat([df, encoded_df], axis=1)
     return df
+
+def print_metrics(y_true, y_pred, label):
+    mse = mean_squared_error(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    expl_var = explained_variance_score(y_true, y_pred)
+    print(f"\n--- {label} ---")
+    print(f"MSE: {mse:.2f}")
+    print(f"MAE: {mae:.2f}")
+    print(f"R2: {r2:.4f}")
+    print(f"Explained Variance: {expl_var:.4f}")
 
 # Cargar datos
 DATA_PATH = './data/co2.csv'
@@ -54,78 +66,73 @@ y = df[y_column]
 X_trainval, X_test, y_trainval, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 X_train, X_val, y_train, y_val = train_test_split(X_trainval, y_trainval, test_size=0.25, random_state=42) # 0.25*0.8=0.2
 
-# Crear y entrenar el modelo
-model = LinearRegression()
-model.fit(X_train, y_train)
+models = {
+    "Linear": LinearRegression(),
+    "Ridge": Ridge(alpha=10.0)   
+}
 
-# Predicciones
-y_pred_train = model.predict(X_train)
-y_pred_val = model.predict(X_val)
-y_pred_test = model.predict(X_test)
+for name, model in models.items():
+    model.fit(X_train, y_train)
+
+    # Predicciones
+    y_pred_train = model.predict(X_train)
+    y_pred_val = model.predict(X_val)
+    y_pred_test = model.predict(X_test)
+
+    print(f"\n===== {name.upper()} =====")
+    print_metrics(y_train, y_pred_train, "Train")
+    print_metrics(y_val, y_pred_val, "Validation")
+    print_metrics(y_test, y_pred_test, "Test")
+
+    # Importancia de coeficientes (Top 10)
+    coef = model.coef_
+    feature_names = X.columns
+    indices = np.argsort(np.abs(coef))[::-1][:10]
+
+    plt.figure(figsize=(10,6))
+    plt.barh(np.array(feature_names)[indices], coef[indices])
+    plt.xlabel('Coeficiente')
+    plt.title(f'Importancia de variables (Top 10) - {name}')
+    plt.gca().invert_yaxis()
+    plt.show()
+    
+    # Visualización: Predicciones vs Valores reales
+    plt.figure(figsize=(8,5))
+    plt.scatter(y_test, y_pred_test, alpha=0.5, label='Test')
+    plt.scatter(y_val, y_pred_val, alpha=0.5, label='Validation', color='orange')
+    plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
+    plt.xlabel('Valores reales')
+    plt.ylabel('Predicciones')
+    plt.title('Predicciones vs Valores reales')
+    plt.legend()
+    plt.show()
+    
+    train_sizes, train_scores, val_scores = learning_curve(
+        model, X, y, cv=5, scoring='r2', n_jobs=-1,
+        train_sizes=np.linspace(0.1, 1.0, 10), random_state=42)
+
+    train_scores_mean = np.mean(train_scores, axis=1)
+    val_scores_mean = np.mean(val_scores, axis=1)
+
+    plt.figure(figsize=(8,6))
+    plt.plot(train_sizes, train_scores_mean, 'o-', color='blue', label='Entrenamiento')
+    plt.plot(train_sizes, val_scores_mean, 'o-', color='orange', label='Validación')
+    plt.xlabel('Tamaño del conjunto de entrenamiento')
+    plt.ylabel('R2 Score')
+    plt.title('Curva de validación')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 
 
-# Evaluación
-
-
-def print_metrics(y_true, y_pred, label):
-    mse = mean_squared_error(y_true, y_pred)
-    mae = mean_absolute_error(y_true, y_pred)
-    r2 = r2_score(y_true, y_pred)
-    expl_var = explained_variance_score(y_true, y_pred)
-    print(f"\n--- {label} ---")
-    print(f"MSE: {mse:.2f}")
-    print(f"MAE: {mae:.2f}")
-    print(f"R2: {r2:.4f}")
-    print(f"Explained Variance: {expl_var:.4f}")
-
-print('Coeficientes:', model.coef_)
-print('Intercepto:', model.intercept_)
-print_metrics(y_train, y_pred_train, 'Train')
-print_metrics(y_val, y_pred_val, 'Validation')
-print_metrics(y_test, y_pred_test, 'Test')
-
-# Visualización: Predicciones vs Valores reales
-
-import matplotlib.pyplot as plt
-plt.figure(figsize=(8,5))
-plt.scatter(y_test, y_pred_test, alpha=0.5, label='Test')
-plt.scatter(y_val, y_pred_val, alpha=0.5, label='Validation', color='orange')
-plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
-plt.xlabel('Valores reales')
-plt.ylabel('Predicciones')
-plt.title('Predicciones vs Valores reales')
-plt.legend()
-plt.show()
-
-# Visualización: Importancia de coeficientes
-import numpy as np
-feature_names = X.columns
-coef = model.coef_
-indices = np.argsort(np.abs(coef))[::-1][:10]  # Top 10
-plt.figure(figsize=(10,6))
-plt.barh(np.array(feature_names)[indices], coef[indices])
-plt.xlabel('Coeficiente')
-plt.title('Importancia de variables (Top 10)')
-plt.gca().invert_yaxis()
-plt.show()
 
 
 
-train_sizes, train_scores, val_scores = learning_curve(
-    model, X, y, cv=5, scoring='r2', n_jobs=-1,
-    train_sizes=np.linspace(0.1, 1.0, 10), random_state=42)
 
-train_scores_mean = np.mean(train_scores, axis=1)
-val_scores_mean = np.mean(val_scores, axis=1)
 
-plt.figure(figsize=(8,6))
-plt.plot(train_sizes, train_scores_mean, 'o-', color='blue', label='Entrenamiento')
-plt.plot(train_sizes, val_scores_mean, 'o-', color='orange', label='Validación')
-plt.xlabel('Tamaño del conjunto de entrenamiento')
-plt.ylabel('R2 Score')
-plt.title('Curva de validación')
-plt.legend()
-plt.grid(True)
-plt.show()
+
+
+
+
